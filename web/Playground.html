@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title></title>
+	<meta charset="utf-8">
+
+	<script src="realm.js"></script>
+	<script>
+		realm.install();
+	</script>
+
+	<script src="../target/define-single/SocialChoice.js"></script>
+</head>
+<body>
+	SocialChoice
+
+	<script>
+
+		var Dilemma = require('SocialChoice');
+		var Group = require('SocialChoice/lib/Group');
+
+		var d = new Dilemma("a", "b", "c", "d", "x", "y");
+		d.voteRank(10, Group("a", "x"), "b");
+		d.voteRank(4, Group("a", "x"), Group("c", "y"));
+		d.voteRank(2, "d", Group("a", "x"), Group("c", "y"), "b");
+		d.voteRank(19, Group("c", "y"), "b", Group("a", "x"));
+		// d.rangeVote(10, {a: 0.10, b:0.02, c:0.20});
+		// d.rangeVote(10, {a: 0.20, b:0, c:0.10, d:0.1});
+
+		var s = d.summation();
+		console.log(s.scoreCard());
+		console.log("range", s.result().join("  "));
+		console.log("plurality", s.plurality().join(" "));
+
+		var r = d.ranking();
+		console.log("ranked pairs", r.rankedPairs().join(" "));
+
+		var i = d.instantRunoff();
+		console.log("instant run-off", i.winner().toString());
+		console.log("runoff plurality", i.pluralityWinner.toString());
+
+	</script>
+
+</body>
+</html>
