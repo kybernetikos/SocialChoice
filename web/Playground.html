@@ -17,27 +17,24 @@
 	<script>
 
 		var Dilemma = require('SocialChoice');
-		var Group = require('SocialChoice/lib/Group');
+		var BallotTransforms = require('SocialChoice/lib/BallotTransforms');
 
-		var d = new Dilemma("a", "b", "c", "d", "x", "y");
-		d.voteRank(10, Group("a", "x"), "b");
-		d.voteRank(4, Group("a", "x"), Group("c", "y"));
-		d.voteRank(2, "d", Group("a", "x"), Group("c", "y"), "b");
-		d.voteRank(19, Group("c", "y"), "b", Group("a", "x"));
-		// d.rangeVote(10, {a: 0.10, b:0.02, c:0.20});
-		// d.rangeVote(10, {a: 0.20, b:0, c:0.10, d:0.1});
+		var d = new Dilemma({options: ["a", "b", "c", "d", "x", "y"]});
+		d.rank(10, ["a", "x"], "b");
+		d.rank(4, ["a", "x"], ["c", "y"]);
+		d.rank(2, "d", ["a", "x"], ["c", "y"], "b");
+		d.rank(19, ["c", "y"], "b", ["a", "x"]);
 
-		var s = d.summation();
-		console.log(s.scoreCard());
-		console.log("range", s.result().join("  "));
-		console.log("plurality", s.plurality().join(" "));
+		d.addTransform(BallotTransforms.borda());
 
-		var r = d.ranking();
+		var s = d.getSumResult();
+		console.log(JSON.stringify(s.overallScoreCard));
+
+		var r = d.getRankingResult();
 		console.log("ranked pairs", r.rankedPairs().join(" "));
 
-		var i = d.instantRunoff();
-		console.log("instant run-off", i.winner().toString());
-		console.log("runoff plurality", i.pluralityWinner.toString());
+		var i = d.getRunOffResult();
+		console.log("instant run-off", i.result.toString());
 
 	</script>
 

@@ -2,15 +2,15 @@ describe('In a four way ranked race with a clear winner', function() {
 	var global = (function() {return this;})();
 	var SocialChoice = global.SocialChoice || require("..");
 
-	var d = new SocialChoice("a", "b", "c", "d");
+	var d = new SocialChoice({options: ["a", "b", "c", "d"]});
 
-	d.voteRank(10, "a", "b", "c");
-	d.voteRank(4, "b", "c");
-	d.voteRank(2, "d", "c", "a");
-	d.voteRank(19, "a", "c", "b", "d");
+	d.rank(10, "a", "b", "c");
+	d.rank(4, "b", "c");
+	d.rank(2, "d", "c", "a");
+	d.rank(19, "a", "c", "b", "d");
 
 	it('finds the correct result with ranked pairs.', function() {
-		var result = d.ranking().rankedPairs();
+		var result = d.getRankingResult().rankedPairs();
 
 		expect(result[0]).toContain("a");
 		expect(result[1]).toContain("c");
@@ -19,9 +19,9 @@ describe('In a four way ranked race with a clear winner', function() {
 	});
 
 	it('finds the correct result with plurality.', function() {
-		var irv = d.instantRunoff();
+		var plurality = d.getPluralityResult();
 
-		expect(irv.pluralityWinner).toContain("a");
+		expect(plurality.ranks[0]).toContain("a");
 	})
 
 });
