@@ -27,6 +27,14 @@ VoterHandler.prototype.addVoteToAllVoters = function(vote) {
 	})
 }
 
+VoterHandler.prototype.getAllVotes = function() {
+	var voters = {};
+	this.voters().forEach(function(voter) {
+		voters[voter.optionText] = voter.getOrderedVotesArray();
+	})
+	return voters;
+}
+
 VoterHandler.prototype.enableDragOnAllVotes = function() {
 	$(function() {
 		$( ".sortable" ).sortable({

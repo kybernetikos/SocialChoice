@@ -11,6 +11,7 @@
 		<script src="js/VoterHandler.js"></script>
 		<script src="js/VoteHandler.js"></script>
 		<script src="js/Voter.js"></script>
+		<script src="../target/single/SocialChoice.js"></script>
 
 		<script id="vote-order-template" type="text/x-handlebars-template">
 			<li class="ui-state-default"><span data-bind="text: optionText"></span><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>asdf</li>
@@ -27,17 +28,22 @@
 	<div>
 		<input id="voterNameInput"><button id="voterNameButton" onclick="addVoter()">Add Voter</button>
 		<input id="voteNameInput"><button id="voteNameButton" onclick="addVote()">Add Vote</button>
+		<button onclick="calculateVotes()">Calculate Votes</button>
 	</div>
 	<script>
-		var voteHandler = new VoterHandler();
+		var voterHandler = new VoterHandler();
 		function addVoter() {
 			var voterName = document.getElementById("voterNameInput").value;
-			voteHandler.addVoter(voterName);
+			voterHandler.addVoter(voterName);
 		}
 		function addVote() {
 			var voteName = document.getElementById("voteNameInput").value;
 			debugger;
-			voteHandler.addVote(voteName);
+			voterHandler.addVote(voteName);
+		}
+		function calculateVotes() {
+			var allVotes = voterHandler.getAllVotes();
+			console.log(allVotes);
 		}
 	</script>
 	</body>
