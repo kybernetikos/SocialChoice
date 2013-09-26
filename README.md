@@ -66,10 +66,11 @@ You can get various kinds of results:
 The whole system is very flexible and extensible.  You can apply restrictions which check votes are
 valid for the particular election you are running, and ballot transforms which can modify votes.
 
-A default restriction is applied when you specify options in your configuration, which stops votes
-from ranking things not specified in the configured options.
+A default restriction (called noWriteIns) is applied when you specify options in your configuration,
+which stops votes from ranking things not specified in the configured options.
 
-A common ballot transform scores anything not mentioned in a ballot as 0 or ranks it last.
+A common ballot transform used by default (called missing) scores anything not mentioned in a ballot
+as 0 or ranks it last.
 
 Some of the result objects have parameters too, for example it's possible to change the way the
 ranked pairs algorithm determines which pair-wise contests are most significant by passing a
