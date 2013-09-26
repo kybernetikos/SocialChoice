@@ -5,8 +5,8 @@ var VoterHandler = function() {
 
 	this.voteHandler = new VoteHandler(this);
 
-	this.addVoter("Adam Iley");
-	this.addVoter("Jon Paul");
+	this.addVoter("Adam");
+	this.addVoter("Jon");
 }
 
 VoterHandler.prototype.addVoter = function(voterName) {

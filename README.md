@@ -16,7 +16,11 @@ A playground for exploring vote counting methods.
 * Source code is [here](https://github.com/kybernetikos/SocialChoice).
 * You can also get it with the following command if you're using node.
 
+```
+
     npm install git+http://github.com/kybernetikos/SocialChoice.git#gh-pages
+
+```
 
 Getting Started
 ---------------
@@ -32,6 +36,7 @@ You can set up an election with the following code:
 	});
 
 ```
+Options must have a unique toString.
 
 Now you can vote for some of the options. Voting can be done by ranking, or by assigning a score, or
 by 'approving' some options.  If you have a restriction that you can only approve a single option
