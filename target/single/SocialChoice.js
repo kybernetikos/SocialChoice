@@ -1,4 +1,4 @@
-// 2013-09-26T18:26:29.000Z
+// 2013-09-26T20:41:49.000Z
 // SocialChoice v0.0.1 in a self-contained file, suitable for the browser.
 
 (function(name, definition) {
@@ -417,6 +417,70 @@
 		module.exports = AcyclicPathMatrix;
 	});
 	
+	// result\Bag.js (modified 21:41:49)
+	define('SocialChoice/lib/result/Bag', function(require, exports, module) {
+		var Util = require('../Util');
+		
+		function Bag() {
+			this.values = [];
+			this.counts = [];
+			this.length = 0;
+			this.total = 0;
+		}
+		
+		Bag.prototype.add = function(value, count) {
+			count = count || 1;
+			var index = Util.binarySearch(this.values, value);
+			if (index >= 0) {
+				this.counts[index] += count;
+			} else {
+				var insertionIndex = -1 - index;
+				this.values.splice(insertionIndex, 0, value);
+				this.counts.splice(insertionIndex, 0, count);
+			}
+			this.length += count;
+			this.total += value * count;
+		};
+		
+		Bag.prototype.get = function(index) {
+			var realPosition = 0;
+			while (index >= 0) {
+				index -= this.counts[realPosition++];
+			}
+			return this.values[realPosition - 1];
+		};
+		
+		Bag.prototype.min = function() {
+			return this.values[0];
+		};
+		
+		Bag.prototype.max = function() {
+			return this.values[this.values.length - 1];
+		};
+		
+		Bag.prototype.mode = function() {
+			var indexes = Util.indexSort(this.counts);
+			// this will choose one at random if there are multiple modes.
+			return this.values[indexes[0]];
+		};
+		
+		Bag.prototype.mean = function() {
+			return this.total / this.length;
+		};
+		
+		Bag.prototype.median = function() {
+			var midPoint = (this.length / 2) - 0.5;
+			if (midPoint !== (midPoint|0)) {
+				var a = this.get(midPoint|0);
+				var b = this.get((midPoint|0) + 1);
+				return (a + b) / 2;
+			}
+			return this.get(midPoint);
+		};
+		
+		module.exports = Bag;
+	});
+	
 	// result\ImaginaryContest.js (modified 18:59:13)
 	define('SocialChoice/lib/result/ImaginaryContest', function(require, exports, module) {
 		function ImaginaryContest(baseMatrix, x, y) {
@@ -640,66 +704,10 @@
 		module.exports = RunOffResult;
 	});
 	
-	// result\Stat.js (modified 18:26:10)
-	define('SocialChoice/lib/result/Stat', function(require, exports, module) {
-		function Stat() {
-			this.values = [];
-			this.min = null;
-			this.max = null;
-			this.total = 0;
-		}
-		
-		Stat.prototype.push = function(value, times) {
-			times = times || 1;
-			if (this.min === null || this.min > value) {
-				this.min = value;
-			}
-			if (this.max === null || this.max < value) {
-				this.max = value;
-			}
-		
-			for (var i = 0; i < times; ++i) {
-				this.values.push(value);
-			}
-		
-			this.total += value * times;
-		};
-		
-		Stat.prototype.mean = function() {
-			return this.total / this.values.length;
-		};
-		
-		Stat.prototype.median = function() {
-			if (this.values.length === 0) {
-				return null;
-			}
-		
-			this.values.sort();
-		
-			var midPoint = (this.values.length / 2) - 0.5;
-			if (midPoint !== (midPoint|0)) {
-				var a = this.values[midPoint|0];
-				var b = this.values[(midPoint|0) + 1];
-				return (a + b) / 2;
-			}
-			return this.values[midPoint];
-		};
-		
-		Stat.prototype.toString = function() {
-			return "(min:"+this.min+" max:"+this.max+" total:"+this.total+" mean:"+this.mean()+" median:"+this.median();
-		};
-		
-		Stat.prototype.valueOf = function() {
-			return this.total;
-		};
-		
-		module.exports = Stat;
-	});
-	
-	// result\SumResult.js (modified 19:03:17)
+	// result\SumResult.js (modified 21:36:54)
 	define('SocialChoice/lib/result/SumResult', function(require, exports, module) {
 		var Util = require('../Util');
-		var Stat = require('./Stat');
+		var Bag = require('./Bag');
 		var ScoredBallot = require('../ScoredBallot');
 		
 		function SumResult(vote) {
@@ -710,16 +718,18 @@
 				}
 				for (var option in ballot.scoreCard) {
 					if (overallScoreCard[option] === undefined) {
-						overallScoreCard[option] = new Stat();
+						overallScoreCard[option] = new Bag();
 					}
-					overallScoreCard[option].push(ballot.scoreCard[option], count);
+					overallScoreCard[option].add(ballot.scoreCard[option], count);
 				}
 			});
 		
 			this.overallScoreCard = overallScoreCard;
 			this.options = Object.keys(overallScoreCard);
 		
-			this.ranks = Util.rankScoreCard(overallScoreCard);
+			this.ranks = Util.rankScoreCard(overallScoreCard, function(stat) {
+				return stat.total;
+			});
 			this.winner = this.ranks[0];
 			this.medianRanks = Util.rankScoreCard(overallScoreCard, function(stat) {
 				return stat.median();
@@ -764,7 +774,7 @@
 		module.exports = ScoredBallot;
 	});
 	
-	// Util.js (modified 15:56:55)
+	// Util.js (modified 20:51:07)
 	define('SocialChoice/lib/Util', function(require, exports, module) {
 		var Group = require('./Group');
 		
@@ -862,6 +872,25 @@
 			};
 		}
 		Util.notIn = notIn;
+		
+		function binarySearch(sortedArray, value) {
+			var minPt = 0;
+			var maxPt = sortedArray.length - 1;
+			while (maxPt >= minPt) {
+				var midPt = Math.floor(minPt + (maxPt - minPt) / 2);
+				var midValue = sortedArray[midPt];
+				if (midValue > value) {
+					maxPt = midPt - 1;
+				} else if (midValue < value) {
+					minPt = midPt + 1;
+				} else {
+					return midPt;
+				}
+			}
+			// minPt is the correct insertion point.
+			return -1 - minPt;
+		};
+		Util.binarySearch = binarySearch;
 	});
 	
 	// Vote.js (modified 19:25:03)
