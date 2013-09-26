@@ -17,7 +17,7 @@
 	<script>
 
 		var Dilemma = require('SocialChoice');
-		var BallotTransforms = require('SocialChoice/lib/BallotTransforms');
+		var BallotTransforms = Dilemma.BallotTransforms;
 
 		var d = new Dilemma({options: ["a", "b", "c", "d", "x", "y"]});
 		d.rank(10, ["a", "x"], "b");
@@ -34,7 +34,7 @@
 		console.log("ranked pairs", r.rankedPairs().join(" "));
 
 		var i = d.getRunOffResult();
-		console.log("instant run-off", i.result.toString());
+		console.log("instant run-off", i.ranks.join(" "));
 
 	</script>
 

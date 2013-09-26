@@ -1,4 +1,4 @@
-// 2013-09-26T07:49:00.000Z
+// 2013-09-26T18:26:29.000Z
 // SocialChoice v0.0.1 in a self-contained file, suitable for the browser.
 
 (function(name, definition) {
@@ -77,67 +77,6 @@
 	var define = libraryRealm.define;
 	var require = libraryRealm.require.bind(null, "");
 
-	// AcyclicPathMatrix.js (modified 07:53:26)
-	define('SocialChoice/lib/AcyclicPathMatrix', function(require, exports, module) {
-		var MirrorMatrix = require('./MirrorMatrix');
-		
-		function AcyclicPathMatrix(options) {
-			MirrorMatrix.call(this, options);
-		}
-		
-		AcyclicPathMatrix.prototype = Object.create(MirrorMatrix.prototype, {
-			constructor: {value: AcyclicPathMatrix}
-		});
-		
-		AcyclicPathMatrix.prototype.set = function(xOption, yOption, value) {
-			var winner = this.choicesMap[xOption];
-			var loser = this.choicesMap[yOption];
-			if (value < 0) {
-				winner = loser;
-				loser = this.choicesMap[xOption];
-			}
-			var winRow = this.matrix[winner];
-			var loseRow = this.matrix[loser];
-		
-			var rowsTheLoserBeats = [];
-			for (var i = 0; i < loseRow.length; ++i) {
-				if (loseRow[i] > 0) {
-					if (winRow[i] < 0) {
-						// there's a cycle
-						return false;
-					}
-					rowsTheLoserBeats.push(i);
-				}
-			}
-		
-			var rowsTheWinnerLosesTo = [];
-			for (var i = 0; i < winRow.length; ++i) {
-				if (winRow[i] < 0) {
-					if (loseRow[i] > 0) {
-						// there's a cycle
-						return false;
-					}
-					rowsTheWinnerLosesTo.push(i);
-				}
-			}
-		
-			var j;
-			winRow[loser] = 1;
-			loseRow[winner] = -1;
-			for (j = 0; j < rowsTheWinnerLosesTo.length; ++j) {
-				loseRow[rowsTheWinnerLosesTo[j]] = -1;
-				this.matrix[rowsTheWinnerLosesTo[j]][loser] = 1;
-			}
-			for (j = 0; j < rowsTheLoserBeats.length; ++j) {
-				winRow[rowsTheLoserBeats[j]] = 1;
-				this.matrix[rowsTheLoserBeats[j]][winner] = -1;
-			}
-			return true;
-		};
-		
-		module.exports = AcyclicPathMatrix;
-	});
-	
 	// BallotTransforms.js (modified 08:08:52)
 	define('SocialChoice/lib/BallotTransforms', function(require, exports, module) {
 		var RankedBallot = require('./RankedBallot');
@@ -286,24 +225,234 @@
 		};
 	});
 	
-	// ImaginaryContest.js (modified 08:02:28)
-	define('SocialChoice/lib/ImaginaryContest', function(require, exports, module) {
+	// main.js (modified 19:26:29)
+	define('SocialChoice/lib/main', function(require, exports, module) {
+		var Vote = require('./Vote');
+		var BallotTransforms = require('./BallotTransforms');
+		var Restrictions = require('./Restrictions');
+		
+		var vote = new Vote({
+			options: ["c", "b", "a", "d", "e"]
+		});
+		
+		vote.addTransform(BallotTransforms.borda());
+		
+		vote.rank(10, "c", "a");
+		vote.score(4, {"d": 10, a: 2});
+		//vote.score(100, {});
+		
+		
+		console.log(vote.getSumResult());
+		console.log(vote.getPluralityResult());
+		var rr = vote.getRankingResult();
+		console.log(rr.rankedPairs());
+		console.log(vote.getRunOffResult());
+	});
+	
+	// RankedBallot.js (modified 21:02:24)
+	define('SocialChoice/lib/RankedBallot', function(require, exports, module) {
+		var Group = require('./Group');
+		var Util = require('./Util');
+		
+		var slice = Array.prototype.slice;
+		
+		function RankedBallot(rankings) {
+			rankings = slice.call(rankings);
+			for (var i = 0; i < rankings.length; i++) {
+				if (Array.isArray(rankings[i])) {
+					rankings[i] = rankings[i].slice();
+					rankings[i].sort();
+				}
+			}
+			this.ranks = rankings;
+			this.rankedOptions = Group.flatten(this.ranks);
+			this.count = this.rankedOptions.length;
+			this.optionToRank = Util.invertRankingArray(rankings);
+			this.maxRank = rankings.length - 1;
+		
+			this.hashkey = "("+rankings.join("),(")+")";
+		}
+		
+		module.exports = RankedBallot;
+	});
+	
+	// Restrictions.js (modified 19:23:07)
+	define('SocialChoice/lib/Restrictions', function(require, exports, module) {
+		var ScoredBallot = require('./ScoredBallot');
+		
+		// Disallows any ballot that specifies an option not in the config.
+		exports.noWriteIns = function noWriteIns(problems, config, ballot) {
+			var isValid = true;
+			var values = config.options || [];
+			for (var i = 0; i < ballot.rankedOptions.length; ++i) {
+				if (values.indexOf(ballot.rankedOptions[i]) < 0) {
+					problems.push("Unable to cast a vote for "+ballot.rankedOptions[i]+" as it is not one of the allowed options "+values.join(", "));
+					isValid = false;
+				}
+			}
+			return isValid;
+		};
+		
+		// Disallows any ballot that doesn't specify rankings/scores for at least number options.
+		exports.selectAtLeast = function selectAtLeast(number) {
+			return function(problems, config, ballot) {
+				var isValid = true;
+				var n = number || config.options.length;
+				if (ballot.rankedOptions.length < n) {
+					problems.push("You voted for "+ballot.rankedOptions.length+" but valid ballots must have at least "+n+" selections.");
+					isValid = false;
+				}
+				return isValid;
+			};
+		};
+		
+		// Disallows any ballot that specifies more than number options ('truncated ballot').
+		exports.selectAtMost = function selectAtMost(number) {
+			return function(problems, config, ballot) {
+				var isValid = true;
+				var n = number || config.options.length;
+				if (ballot.rankedOptions.length > n) {
+					problems.push("You voted for "+ballot.rankedOptions.length+" but valid ballots must have at most "+n+" selections.");
+					isValid = false;
+				}
+				return isValid;
+			};
+		};
+		
+		// Disallows any ballot that doesn't specify exactly number options.
+		// selectExactly(1), is a restriction that will only allow you to cast ballots for a single
+		// candidate.  This is like a FPTP election.
+		exports.selectExactly = function selectExactly(number) {
+			return function(problems, config, ballot) {
+				var isValid = true;
+				var n = number || config.options.length;
+				if (ballot.rankedOptions.length !== n) {
+					problems.push("You voted for "+ballot.rankedOptions.length+" but valid ballots must have exactly "+n+" selections.");
+					isValid = false;
+				}
+				return isValid;
+			};
+		};
+		
+		exports.scoreInRange = function scoreInRange(min, max) {
+			return function(problems, config, ballot) {
+				var isValid = true;
+				if (ballot instanceof ScoredBallot) {
+					var mn = min || 0;
+					var mx = max || 100;
+		
+					if (ballot.minScore !== null && ballot.minScore < mn) {
+						problems.push("Cannot submit a ballot with a minimum score less than "+mn+", was "+ballot.minScore);
+						isValid = false;
+					}
+		
+					if (ballot.maxScore !== null && ballot.maxScore > mx) {
+						problems.push("Cannot submit a ballot with a maximum score more than "+mx+", was "+ballot.maxScore);
+						isValid = false;
+					}
+				}
+				return isValid;
+			}
+		};
+	});
+	
+	// result\AcyclicPathMatrix.js (modified 18:41:49)
+	define('SocialChoice/lib/result/AcyclicPathMatrix', function(require, exports, module) {
+		var Matrix = require('./Matrix');
+		
+		function AcyclicPathMatrix(options) {
+			Matrix.call(this, options);
+		}
+		
+		AcyclicPathMatrix.prototype = Object.create(Matrix.prototype, {
+			constructor: {value: AcyclicPathMatrix}
+		});
+		
+		AcyclicPathMatrix.prototype.set = function(xOption, yOption, value) {
+			var winner = this.choicesMap[xOption];
+			var loser = this.choicesMap[yOption];
+			if (value < 0) {
+				winner = loser;
+				loser = this.choicesMap[xOption];
+			}
+			var winRow = this.matrix[winner];
+			var loseRow = this.matrix[loser];
+		
+			var rowsTheLoserBeats = [];
+			for (var i = 0; i < loseRow.length; ++i) {
+				if (loseRow[i] > 0) {
+					if (winRow[i] < 0) {
+						// there's a cycle
+						return false;
+					}
+					rowsTheLoserBeats.push(i);
+				}
+			}
+		
+			var rowsTheWinnerLosesTo = [];
+			for (var i = 0; i < winRow.length; ++i) {
+				if (winRow[i] < 0) {
+					if (loseRow[i] > 0) {
+						// there's a cycle
+						return false;
+					}
+					rowsTheWinnerLosesTo.push(i);
+				}
+			}
+		
+			var j;
+			winRow[loser] = 1;
+			loseRow[winner] = -1;
+			for (j = 0; j < rowsTheWinnerLosesTo.length; ++j) {
+				loseRow[rowsTheWinnerLosesTo[j]] = -1;
+				this.matrix[rowsTheWinnerLosesTo[j]][loser] = 1;
+			}
+			for (j = 0; j < rowsTheLoserBeats.length; ++j) {
+				winRow[rowsTheLoserBeats[j]] = 1;
+				this.matrix[rowsTheLoserBeats[j]][winner] = -1;
+			}
+			return true;
+		};
+		
+		module.exports = AcyclicPathMatrix;
+	});
+	
+	// result\ImaginaryContest.js (modified 18:59:13)
+	define('SocialChoice/lib/result/ImaginaryContest', function(require, exports, module) {
 		function ImaginaryContest(baseMatrix, x, y) {
 			this.baseMatrix = baseMatrix;
 			this.x = x;
 			this.y = y;
 		}
 		
-		ImaginaryContest.prototype.victoryMargin = function() {
-			return Math.abs(this.baseMatrix.get(this.x, this.y));
-		};
-		
 		ImaginaryContest.prototype.winner = function() {
-			return (this.baseMatrix.get(this.x, this.y) > 0) ? this.x : this.y;
+			return (this.baseMatrix.get(this.x, this.y) > this.baseMatrix.get(this.y, this.x)) ? this.x : this.y;
 		};
 		
 		ImaginaryContest.prototype.loser = function() {
-			return (this.baseMatrix.get(this.x, this.y) > 0) ? this.y : this.x;
+			return (this.baseMatrix.get(this.x, this.y) < this.baseMatrix.get(this.y, this.x)) ? this.x : this.y;
+		};
+		
+		ImaginaryContest.prototype.isDraw = function() {
+			return (this.baseMatrix.get(this.x, this.y) === this.baseMatrix.get(this.y, this.x));
+		};
+		
+		ImaginaryContest.prototype.victoryMargin = function() {
+			var forX = this.baseMatrix.get(this.x, this.y);
+			var forY = this.baseMatrix.get(this.y, this.x);
+			return Math.abs(forX - forY);
+		};
+		
+		ImaginaryContest.prototype.voteCount = function() {
+			return this.baseMatrix.get(this.x, this.y) + this.baseMatrix.get(this.y, this.x);
+		};
+		
+		ImaginaryContest.prototype.victorVoteCount = function() {
+			return Math.max(this.baseMatrix.get(this.x, this.y), this.baseMatrix.get(this.y, this.x));
+		};
+		
+		ImaginaryContest.prototype.loserVoteCount = function() {
+			return Math.min(this.baseMatrix.get(this.x, this.y), this.baseMatrix.get(this.y, this.x));
 		};
 		
 		ImaginaryContest.prototype.toString = function() {
@@ -313,33 +462,9 @@
 		module.exports = ImaginaryContest;
 	});
 	
-	// main.js (modified 21:32:50)
-	define('SocialChoice/lib/main', function(require, exports, module) {
-		var Vote = require('./Vote');
-		var BallotTransforms = require('./BallotTransforms');
-		
-		var vote = new Vote({
-			options: ["c", "b", "a", "d", "e"]
-		});
-		
-		vote.addTransform(
-			BallotTransforms.borda()
-		);
-		
-		vote.rank(10, "c", "a");
-		vote.score(4, {"d": 10, a: 2});
-		vote.score(100, {});
-		
-		console.log(vote.getSumResult());
-		console.log(vote.getPluralityResult());
-		var rr = vote.getRankingResult();
-		console.log(rr.rankedPairs());
-		console.log(vote.getRunOffResult());
-	});
-	
-	// Matrix.js (modified 08:02:58)
-	define('SocialChoice/lib/Matrix', function(require, exports, module) {
-		var Util = require('./Util');
+	// result\Matrix.js (modified 18:35:23)
+	define('SocialChoice/lib/result/Matrix', function(require, exports, module) {
+		var Util = require('../Util');
 		var squareArray = Util.squareArray, toMap = Util.toMap, range = Util.range;
 		
 		function Matrix(options) {
@@ -376,100 +501,7 @@
 		module.exports = Matrix;
 	});
 	
-	// MirrorMatrix.js (modified 08:02:58)
-	define('SocialChoice/lib/MirrorMatrix', function(require, exports, module) {
-		var Matrix = require('./Matrix');
-		
-		function MirrorMatrix(options) {
-			Matrix.call(this, options);
-		}
-		
-		MirrorMatrix.prototype = Object.create(Matrix.prototype, {
-			constructor: {value: MirrorMatrix}
-		});
-		
-		MirrorMatrix.prototype.set = function(xOption, yOption, value) {
-			var set = Matrix.prototype.set;
-			set.call(this, xOption, yOption, value);
-			set.call(this, yOption, xOption, -value);
-		};
-		
-		module.exports = MirrorMatrix;
-	});
-	
-	// RankedBallot.js (modified 21:02:24)
-	define('SocialChoice/lib/RankedBallot', function(require, exports, module) {
-		var Group = require('./Group');
-		var Util = require('./Util');
-		
-		var slice = Array.prototype.slice;
-		
-		function RankedBallot(rankings) {
-			rankings = slice.call(rankings);
-			for (var i = 0; i < rankings.length; i++) {
-				if (Array.isArray(rankings[i])) {
-					rankings[i] = rankings[i].slice();
-					rankings[i].sort();
-				}
-			}
-			this.ranks = rankings;
-			this.rankedOptions = Group.flatten(this.ranks);
-			this.count = this.rankedOptions.length;
-			this.optionToRank = Util.invertRankingArray(rankings);
-			this.maxRank = rankings.length - 1;
-		
-			this.hashkey = "("+rankings.join("),(")+")";
-		}
-		
-		module.exports = RankedBallot;
-	});
-	
-	// Restrictions.js (modified 08:05:48)
-	define('SocialChoice/lib/Restrictions', function(require, exports, module) {
-		// Disallows any ballot that specifies an option not in the config.
-		exports.noWriteIns = function noWriteIns(config, ballot) {
-			var values = config.options || [];
-			for (var i = 0; i < ballot.rankedOptions.length; ++i) {
-				if (values.indexOf(ballot.rankedOptions[i]) < 0) {
-					throw new Error("Unable to cast a vote for "+ballot.rankedOptions[i]+" as it is not one of the allowed options "+values.join(", "));
-				}
-			}
-		};
-		
-		// Disallows any ballot that doesn't specify rankings/scores for at least number options.
-		exports.selectAtLeast = function selectAtLeast(number) {
-			return function(config, ballot) {
-				var n = number || config.options.length;
-				if (ballot.rankedOptions.length < n) {
-					throw new Error("You voted for "+ballot.rankedOptions.length+" but valid ballots must have at least "+n+" selections.");
-				}
-			};
-		};
-		
-		// Disallows any ballot that specifies more than number options ('truncated ballot').
-		exports.selectAtMost = function selectAtMost(number) {
-			return function(config, ballot) {
-				var n = number || config.options.length;
-				if (ballot.rankedOptions.length > n) {
-					throw new Error("You voted for "+ballot.rankedOptions.length+" but valid ballots must have at most "+n+" selections.");
-				}
-			};
-		};
-		
-		// Disallows any ballot that doesn't specify exactly number options.
-		// selectExactly(1), is a restriction that will only allow you to cast ballots for a single
-		// candidate.  This is like a FPTP election.
-		exports.selectExactly = function selectExactly(number) {
-			return function(config, ballot) {
-				var n = number || config.options.length;
-				if (ballot.rankedOptions.length !== n) {
-					throw new Error("You voted for "+ballot.rankedOptions.length+" but valid ballots must have exactly "+n+" selections.");
-				}
-			};
-		};
-	});
-	
-	// result\PluralityResult.js (modified 08:49:00)
+	// result\PluralityResult.js (modified 18:23:54)
 	define('SocialChoice/lib/result/PluralityResult', function(require, exports, module) {
 		var Util = require('../Util');
 		var Group = require('../Group');
@@ -502,6 +534,7 @@
 			this.voteCount = frontRunnerScores(vote);
 			this.ranks = Util.rankScoreCard(this.voteCount);
 			this.options = Group.flatten(this.ranks);
+			this.winner = this.ranks[0];
 		}
 		
 		PluralityResult.frontRunnerScores = frontRunnerScores;
@@ -509,56 +542,60 @@
 		module.exports = PluralityResult;
 	});
 	
-	// result\RankingResult.js (modified 21:17:43)
+	// result\RankingResult.js (modified 19:10:31)
 	define('SocialChoice/lib/result/RankingResult', function(require, exports, module) {
-		var AcyclicPathMatrix = require('../AcyclicPathMatrix');
-		var MirrorMatrix = require('../MirrorMatrix');
-		var ImaginaryContest = require('../ImaginaryContest');
+		var AcyclicPathMatrix = require('./AcyclicPathMatrix');
+		var Matrix = require('./Matrix');
+		var ImaginaryContest = require('./ImaginaryContest');
 		var Group = require('../Group');
 		var Util = require('../Util');
 		
 		function RankingResult(vote) {
+			this.vote = vote;
 			this.choices = vote.allOptions();
 		
-			this.rankingMatrix = new MirrorMatrix(this.choices);
+			this.voteMatrix = new Matrix(this.choices);
 			this.imaginaryContests = [];
 			for (var i = 0; i < this.choices.length; ++i) {
 				for (var j = i + 1; j < this.choices.length; ++j) {
-					this.imaginaryContests.push(new ImaginaryContest(this.rankingMatrix, this.choices[i], this.choices[j]));
+					this.imaginaryContests.push(new ImaginaryContest(this.voteMatrix, this.choices[i], this.choices[j]));
 				}
 			}
 		
 			vote.forEachBallot(function(ballot, voteCount) {
 				var rankedSets = ballot.ranks;
+				var voteMatrix = this.voteMatrix;
 				for (var i = 0; i < rankedSets.length; ++i) {
 					for (var j = i + 1; j < rankedSets.length; ++j) {
-						this._addPreference(voteCount, rankedSets[i], rankedSets[j]);
+						Group.forEach(rankedSets[i], function(preferred) {
+							Group.forEach(rankedSets[j], function(lessPreferred) {
+								voteMatrix.increment(preferred, lessPreferred, voteCount);
+							});
+						});
 					}
 				}
 			}.bind(this));
 		}
 		
-		RankingResult.prototype._addPreference = function(number, preferred, lessPreferred) {
-			var rankMatrix = this.rankingMatrix;
-			Group.forEach(preferred, function(preferredValue) {
-				Group.forEach(lessPreferred, function(lessPreferredValue) {
-					rankMatrix.increment(preferredValue, lessPreferredValue, number);
-				});
-			});
-		};
+		RankingResult.prototype.rankedPairs = function(contestImportanceFunction) {
+			contestImportanceFunction = contestImportanceFunction || function(contest, vote) {
+				// this mainly considers the victory margin, but uses the number of votes for the victor
+				// as a tie break.
+				return contest.victoryMargin() + (contest.victorVoteCount() / vote.voters);
+			};
 		
-		RankingResult.prototype.rankedPairs = function() {
+			var vote = this.vote;
 			var paths = new AcyclicPathMatrix(this.choices);
 		
-			// TODO: do something not-arbitrary when the contests have equal margins.
-			this.imaginaryContests.slice().filter(function(contest) {
-				return contest.victoryMargin() > 0;
+			this.imaginaryContests.filter(function(contest) {
+				return contestImportanceFunction(contest, vote) > 0;
 			}).sort(function(a, b) {
-						return b.victoryMargin() - a.victoryMargin();
-					}).forEach(function(contest) {
-						paths.set(contest.winner(), contest.loser(), 1);
-					});
+				return contestImportanceFunction(b, vote) - contestImportanceFunction(a, vote);
+			}).forEach(function(contest) {
+				paths.set(contest.winner(), contest.loser(), 1);
+			});
 		
+			// ranking goes from least transitive defeats to most transitive defeats.
 			var totals = paths._rowTotals().map(function(rowTotals) {
 				return rowTotals["-1"] || 0;
 			});
@@ -569,7 +606,7 @@
 		module.exports = RankingResult;
 	});
 	
-	// result\RunOffResult.js (modified 08:48:21)
+	// result\RunOffResult.js (modified 18:24:23)
 	define('SocialChoice/lib/result/RunOffResult', function(require, exports, module) {
 		var Util = require('../Util');
 		var Group = require('../Group');
@@ -596,30 +633,102 @@
 			}
 		
 			this.ranks = result;
+			this.winner = result[0];
 			this.options = Group.flatten(result);
 		};
 		
 		module.exports = RunOffResult;
 	});
 	
-	// result\SumResult.js (modified 08:41:55)
+	// result\Stat.js (modified 18:26:10)
+	define('SocialChoice/lib/result/Stat', function(require, exports, module) {
+		function Stat() {
+			this.values = [];
+			this.min = null;
+			this.max = null;
+			this.total = 0;
+		}
+		
+		Stat.prototype.push = function(value, times) {
+			times = times || 1;
+			if (this.min === null || this.min > value) {
+				this.min = value;
+			}
+			if (this.max === null || this.max < value) {
+				this.max = value;
+			}
+		
+			for (var i = 0; i < times; ++i) {
+				this.values.push(value);
+			}
+		
+			this.total += value * times;
+		};
+		
+		Stat.prototype.mean = function() {
+			return this.total / this.values.length;
+		};
+		
+		Stat.prototype.median = function() {
+			if (this.values.length === 0) {
+				return null;
+			}
+		
+			this.values.sort();
+		
+			var midPoint = (this.values.length / 2) - 0.5;
+			if (midPoint !== (midPoint|0)) {
+				var a = this.values[midPoint|0];
+				var b = this.values[(midPoint|0) + 1];
+				return (a + b) / 2;
+			}
+			return this.values[midPoint];
+		};
+		
+		Stat.prototype.toString = function() {
+			return "(min:"+this.min+" max:"+this.max+" total:"+this.total+" mean:"+this.mean()+" median:"+this.median();
+		};
+		
+		Stat.prototype.valueOf = function() {
+			return this.total;
+		};
+		
+		module.exports = Stat;
+	});
+	
+	// result\SumResult.js (modified 19:03:17)
 	define('SocialChoice/lib/result/SumResult', function(require, exports, module) {
 		var Util = require('../Util');
+		var Stat = require('./Stat');
+		var ScoredBallot = require('../ScoredBallot');
 		
 		function SumResult(vote) {
 			var overallScoreCard = {};
 			vote.forEachBallot(function(ballot, count) {
+				if (ballot instanceof ScoredBallot === false) {
+					throw new Error("Cannot calculate the sum for ballots without scores. Consider adding a borda transform.");
+				}
 				for (var option in ballot.scoreCard) {
 					if (overallScoreCard[option] === undefined) {
-						overallScoreCard[option] = 0;
+						overallScoreCard[option] = new Stat();
 					}
-					overallScoreCard[option] += ballot.scoreCard[option] * count;
+					overallScoreCard[option].push(ballot.scoreCard[option], count);
 				}
 			});
 		
 			this.overallScoreCard = overallScoreCard;
-			this.ranks = Util.rankScoreCard(overallScoreCard);
 			this.options = Object.keys(overallScoreCard);
+		
+			this.ranks = Util.rankScoreCard(overallScoreCard);
+			this.winner = this.ranks[0];
+			this.medianRanks = Util.rankScoreCard(overallScoreCard, function(stat) {
+				return stat.median();
+			});
+			this.meanRanks = Util.rankScoreCard(overallScoreCard, function(stat) {
+				return stat.mean();
+			});
+		
+		
 		}
 		
 		module.exports = SumResult;
@@ -655,7 +764,7 @@
 		module.exports = ScoredBallot;
 	});
 	
-	// Util.js (modified 08:28:30)
+	// Util.js (modified 15:56:55)
 	define('SocialChoice/lib/Util', function(require, exports, module) {
 		var Group = require('./Group');
 		
@@ -681,9 +790,12 @@
 		}
 		Util.order = order;
 		
-		function rankScoreCard(scoreCard) {
+		function rankScoreCard(scoreCard, valueFunction) {
+			valueFunction = valueFunction || function(obj) {
+				return obj.valueOf();
+			};
 			var scoredKeys = Object.keys(scoreCard).sort();
-			var scores = scoredKeys.map(function(key) {return scoreCard[key];});
+			var scores = scoredKeys.map(function(key) {return valueFunction(scoreCard[key]);});
 			return Util.order(scoredKeys, scores);
 		}
 		Util.rankScoreCard = rankScoreCard;
@@ -752,7 +864,7 @@
 		Util.notIn = notIn;
 	});
 	
-	// Vote.js (modified 08:47:45)
+	// Vote.js (modified 19:25:03)
 	define('SocialChoice/lib/Vote', function(require, exports, module) {
 		var RankedBallot = require('./RankedBallot');
 		var ScoredBallot = require('./ScoredBallot');
@@ -805,10 +917,19 @@
 			push.apply(this.restrictions, arguments);
 		};
 		
+		Vote.prototype.check = function(ballot) {
+			var problems = [];
+			for (var i = 0; i < this.restrictions.length; ++i) {
+				this.restrictions[i](problems, this.config, ballot);
+			}
+			return problems;
+		};
+		
 		Vote.prototype.cast = function(ballot, times) {
 			times = times || 1;
-			for (var i = 0; i < this.restrictions.length; ++i) {
-				this.restrictions[i](this.config, ballot);
+			var problems = this.check(ballot);
+			if (problems.length > 0) {
+				throw new Error("Could not cast invalid ballot:\n\t" + problems.join("\n\t"));
 			}
 			this.votingHasCommenced = true;
 			if (this.ballots[ballot.hashkey] === undefined) {
