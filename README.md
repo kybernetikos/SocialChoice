@@ -33,7 +33,9 @@ You can set up an election with the following code:
 
 ```
 
-Now you can vote for some of the options. Voting can be done by ranking, or by assigning a score.
+Now you can vote for some of the options. Voting can be done by ranking, or by assigning a score, or
+by 'approving' some options.  If you have a restriction that you can only approve a single option
+then this becomes a simple plurality election.
 
 ```javascript
 
@@ -44,8 +46,11 @@ Now you can vote for some of the options. Voting can be done by ranking, or by a
 
 	vote.score(4, {
 		"a": 3,
-		"x": 99
+		"x": 99,
+		"y": 52
 	});
+
+	vote.approve(3, "a", "y", "b");
 
 ```
 
