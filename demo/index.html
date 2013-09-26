@@ -1,0 +1,35 @@
+<html>
+	<head>
+		<title>Vote!</title>
+		<link href="lib/jquery-ui-1.10.3.custom/css/vader/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+		<link href="index.css" rel="stylesheet">
+		<script src="lib/knockout.js"></script>
+		<script src="lib/mustache.js"></script>
+		<script src="lib/ko.mustache.js"></script>
+		<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+		<script src="js/VoterHandler.js"></script>
+
+		<script>
+			$(function() {
+				$( "#sortable" ).sortable();
+				$( "#sortable" ).disableSelection();
+			});
+		</script>
+		<script id="vote-order-template" type="text/x-handlebars-template">
+			<li class="ui-state-default"><span data-bind="text: optionText"></span><span class="ui-icon ui-icon-arrowthick-2-n-s"></span></li>
+		</script>
+
+		<script id="voters-template" type="text/x-handlebars-template">
+			<div data-bind="text: optionText"></div>
+			<div data-bind="template: {name: 'vote-order-template', foreach: votes}"></div>
+		</script>
+	</head>
+	<body>
+	<ul id="sortable" data-bind="template: {name: 'voters-template', foreach: voters}">
+	</ul>
+	<script>
+		var voteHandler = new VoterHandler();
+	</script>
+	</body>
+</html>
