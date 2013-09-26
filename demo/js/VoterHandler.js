@@ -35,6 +35,10 @@ VoterHandler.prototype.getAllVotes = function() {
 	return voters;
 }
 
+VoterHandler.prototype.getAllOptions = function() {
+	return this.voteHandler.getVotes();
+}
+
 VoterHandler.prototype.enableDragOnAllVotes = function() {
 	$(function() {
 		$( ".sortable" ).sortable({

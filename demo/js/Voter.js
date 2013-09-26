@@ -22,5 +22,4 @@ Voter.prototype.addVote = function(voteName) {
 Voter.prototype.voterUpdatedTheirChoice = function(startPosition, endPosition) {
 	var voteMoved = this.orderedVotes.splice(startPosition,1)[0];
 	this.orderedVotes.splice(endPosition,0,voteMoved);
-	debugger;
 }

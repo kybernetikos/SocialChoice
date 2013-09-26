@@ -14,7 +14,7 @@
 		<script src="../target/single/SocialChoice.js"></script>
 
 		<script id="vote-order-template" type="text/x-handlebars-template">
-			<li class="ui-state-default"><span data-bind="text: optionText"></span><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>asdf</li>
+			<li class="ui-state-default"><span data-bind="text: optionText"></span><span class="ui-icon ui-icon-arrowthick-2-n-s"></span></li>
 		</script>
 
 		<script id="voters-template" type="text/x-handlebars-template">
@@ -29,6 +29,7 @@
 		<input id="voterNameInput"><button id="voterNameButton" onclick="addVoter()">Add Voter</button>
 		<input id="voteNameInput"><button id="voteNameButton" onclick="addVote()">Add Vote</button>
 		<button onclick="calculateVotes()">Calculate Votes</button>
+		<div id="results"></div>
 	</div>
 	<script>
 		var voterHandler = new VoterHandler();
@@ -43,7 +44,20 @@
 		}
 		function calculateVotes() {
 			var allVotes = voterHandler.getAllVotes();
-			console.log(allVotes);
+			var allOptions = voterHandler.getAllOptions();
+			var vote = new SocialChoice({
+				options: allOptions
+			});
+
+			for (var index in allVotes) {
+				var voters = allVotes[index];
+				voters.unshift(1);
+				SocialChoice.prototype.rank.apply(vote, voters);
+				voters.shift(1);
+			}
+
+			var resultsDiv = document.getElementById("results");
+			resultsDiv.innerHTML = vote.getRankingResult().rankedPairs().join(" ");
 		}
 	</script>
 	</body>
