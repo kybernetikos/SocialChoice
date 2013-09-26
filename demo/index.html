@@ -9,25 +9,21 @@
 		<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
 		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 		<script src="js/VoterHandler.js"></script>
+		<script src="js/VoteHandler.js"></script>
+		<script src="js/Voter.js"></script>
 
-		<script>
-			$(function() {
-				$( "#sortable" ).sortable();
-				$( "#sortable" ).disableSelection();
-			});
-		</script>
 		<script id="vote-order-template" type="text/x-handlebars-template">
 			<li class="ui-state-default"><span data-bind="text: optionText"></span><span class="ui-icon ui-icon-arrowthick-2-n-s"></span></li>
 		</script>
 
 		<script id="voters-template" type="text/x-handlebars-template">
 			<div data-bind="text: optionText"></div>
-			<div data-bind="template: {name: 'vote-order-template', foreach: votes}"></div>
+			<ul class="sortable"  data-bind="template: {name: 'vote-order-template', foreach: votes}"></ul>
 		</script>
 	</head>
 	<body>
-	<ul id="sortable" data-bind="template: {name: 'voters-template', foreach: voters}">
-	</ul>
+	<div id="voter" data-bind="template: {name: 'voters-template', foreach: voters}">
+	</div>
 	<script>
 		var voteHandler = new VoterHandler();
 	</script>
