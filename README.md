@@ -16,7 +16,7 @@ A playground for exploring vote counting methods.
 * Source code is [here](https://github.com/kybernetikos/SocialChoice).
 * You can also get it with the following command if you're using node.
 
-	npm install git+http://github.com/kybernetikos/SocialChoice.git#gh-pages
+    npm install git+http://github.com/kybernetikos/SocialChoice.git#gh-pages
 
 Getting Started
 ---------------
