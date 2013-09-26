@@ -14,6 +14,7 @@ A playground for exploring vote counting methods.
 * This document is available nicely formatted [here](http://kybernetikos.github.io/SocialChoice).
 * Tests are [here](http://kybernetikos.github.io/SocialChoice/scenarios).
 * Source code is [here](https://github.com/kybernetikos/SocialChoice).
+* Demo is [here](http://kybernetikos.github.io/SocialChoice/demo/).
 * You can also get it with the following command if you're using node.
 
 ```
