@@ -21,7 +21,7 @@ describe('In a four way ranked race taken from the wikipedia example', function(
 	it('finds the correct winner with irv.', function() {
 		var irv = d.getRunOffResult();
 
-		var result = irv.result;
+		var result = irv.ranks;
 		expect(result[0]).toContain("knoxville");
 	})
 
