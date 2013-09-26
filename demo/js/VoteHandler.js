@@ -7,7 +7,7 @@ var VoteHandler = function(voterHandler) {
 }
 
 VoteHandler.prototype.addVote = function(voteName) {
-	this.voterHandler.addVote(voteName);
+	this.voterHandler.addVoteToAllVoters(voteName);
 	this.votes.push(voteName);
 }
 

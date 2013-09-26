@@ -17,15 +17,30 @@ VoterHandler.prototype.addVoter = function(voterName) {
 	this.enableDragOnAllVotes();
 }
 
-VoterHandler.prototype.addVote = function(vote) {
-	this.voters().forEach(function(vote) {
-		this.addVote(vote);
-	}.bind(this))
+VoterHandler.prototype.addVote = function(voteName) {
+	this.voteHandler.addVote(voteName)
+}
+
+VoterHandler.prototype.addVoteToAllVoters = function(vote) {
+	this.voters().forEach(function(voter) {
+		voter.addVote(vote);
+	})
 }
 
 VoterHandler.prototype.enableDragOnAllVotes = function() {
 	$(function() {
-		$( ".sortable" ).sortable();
+		$( ".sortable" ).sortable({
+			start: function(event, ui) {
+				ui.item.data('start_pos', ui.item.index());
+			},
+			update: function(event, ui) {
+				//Window Context
+				var startPosition = ui.item.data('start_pos');
+				var endPosition = ui.item.index();
+				var voterHandler = ko.dataFor(this);
+				voterHandler.voterUpdatedTheirChoice(startPosition, endPosition);
+			}
+		});
 		$( ".sortable" ).disableSelection();
 	});
 }

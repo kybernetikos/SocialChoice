@@ -13,7 +13,7 @@
 		<script src="js/Voter.js"></script>
 
 		<script id="vote-order-template" type="text/x-handlebars-template">
-			<li class="ui-state-default"><span data-bind="text: optionText"></span><span class="ui-icon ui-icon-arrowthick-2-n-s"></span></li>
+			<li class="ui-state-default"><span data-bind="text: optionText"></span><span class="ui-icon ui-icon-arrowthick-2-n-s"></span>asdf</li>
 		</script>
 
 		<script id="voters-template" type="text/x-handlebars-template">
@@ -24,8 +24,21 @@
 	<body>
 	<div id="voter" data-bind="template: {name: 'voters-template', foreach: voters}">
 	</div>
+	<div>
+		<input id="voterNameInput"><button id="voterNameButton" onclick="addVoter()">Add Voter</button>
+		<input id="voteNameInput"><button id="voteNameButton" onclick="addVote()">Add Vote</button>
+	</div>
 	<script>
 		var voteHandler = new VoterHandler();
+		function addVoter() {
+			var voterName = document.getElementById("voterNameInput").value;
+			voteHandler.addVoter(voterName);
+		}
+		function addVote() {
+			var voteName = document.getElementById("voteNameInput").value;
+			debugger;
+			voteHandler.addVote(voteName);
+		}
 	</script>
 	</body>
 </html>
