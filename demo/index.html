@@ -6,8 +6,8 @@
 		<script src="lib/knockout.js"></script>
 		<script src="lib/mustache.js"></script>
 		<script src="lib/ko.mustache.js"></script>
-		<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+		<script src="lib/jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
+		<script src="lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.min.js"></script>
 		<script src="js/VoterHandler.js"></script>
 		<script src="js/VoteHandler.js"></script>
 		<script src="js/Voter.js"></script>
@@ -33,6 +33,11 @@
 	</div>
 	<script>
 		var voterHandler = new VoterHandler();
+		var voteHandler = new VoteHandler(voterHandler);
+
+		voterHandler.addVoter("Adam Iley");
+		voterHandler.addVoter("Jon Paul");
+
 		function addVoter() {
 			var voterName = document.getElementById("voterNameInput").value;
 			voterHandler.addVoter(voterName);
@@ -40,11 +45,11 @@
 		function addVote() {
 			var voteName = document.getElementById("voteNameInput").value;
 			debugger;
-			voterHandler.addVote(voteName);
+			voteHandler.addVote(voteName);
 		}
 		function calculateVotes() {
 			var allVotes = voterHandler.getAllVotes();
-			var allOptions = voterHandler.getAllOptions();
+			var allOptions = voteHandler.getVotes();
 			var vote = new SocialChoice({
 				options: allOptions
 			});

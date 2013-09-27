@@ -1,5 +1,6 @@
 var VoteHandler = function(voterHandler) {
 	this.voterHandler = voterHandler;
+	this.voterHandler.setVoteHandler(this);
 	this.votes = ko.observableArray([]);
 	this.addVote("Firefly");
 	this.addVote("Buffy");
