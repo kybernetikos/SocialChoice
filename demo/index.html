@@ -11,6 +11,7 @@
 		<script src="js/VoterHandler.js"></script>
 		<script src="js/VoteHandler.js"></script>
 		<script src="js/Voter.js"></script>
+		<script src="js/VoteCounter.js"></script>
 		<script src="../target/single/SocialChoice.js"></script>
 
 		<script id="vote-order-template" type="text/x-handlebars-template">
@@ -29,11 +30,12 @@
 		<input id="voterNameInput"><button id="voterNameButton" onclick="addVoter()">Add Voter</button>
 		<input id="voteNameInput"><button id="voteNameButton" onclick="addVote()">Add Vote</button>
 		<button onclick="calculateVotes()">Calculate Votes</button>
-		<div id="results"></div>
+		<div id="results" data-bind="text: voteResult"></div>
 	</div>
 	<script>
 		var voterHandler = new VoterHandler();
 		var voteHandler = new VoteHandler(voterHandler);
+		var voteCounter = new VoteCounter(voterHandler, voteHandler);
 
 		voterHandler.addVoter("Adam Iley");
 		voterHandler.addVoter("Jon Paul");
@@ -44,25 +46,10 @@
 		}
 		function addVote() {
 			var voteName = document.getElementById("voteNameInput").value;
-			debugger;
 			voteHandler.addVote(voteName);
 		}
 		function calculateVotes() {
-			var allVotes = voterHandler.getAllVotes();
-			var allOptions = voteHandler.getVotes();
-			var vote = new SocialChoice({
-				options: allOptions
-			});
-
-			for (var index in allVotes) {
-				var voters = allVotes[index];
-				voters.unshift(1);
-				SocialChoice.prototype.rank.apply(vote, voters);
-				voters.shift(1);
-			}
-
-			var resultsDiv = document.getElementById("results");
-			resultsDiv.innerHTML = vote.getRankingResult().rankedPairs().join(" ");
+			voteCounter.calculateVotes();
 		}
 	</script>
 	</body>
