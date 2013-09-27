@@ -1,4 +1,4 @@
-// 2013-09-26T20:41:49.000Z
+// 2013-09-26T22:05:18.000Z
 // SocialChoice v0.0.1 in a single file (needs a global 'define' function).
 
 // BallotTransforms.js (modified 08:08:52)
@@ -149,12 +149,25 @@ define('SocialChoice/lib/Group', function(require, exports, module) {
 	};
 });
 
-// main.js (modified 19:26:29)
+// main.js (modified 22:57:40)
 define('SocialChoice/lib/main', function(require, exports, module) {
 	var Vote = require('./Vote');
 	var BallotTransforms = require('./BallotTransforms');
 	var Restrictions = require('./Restrictions');
 	
+	var vote = new Vote({
+		options: ["firefly", "buffy", "angel"]
+	});
+	
+	vote.rank(1, "firefly", "buffy", "angel");
+	vote.rank(1, "firefly", "angel", "buffy");
+	
+	var r = vote.getRankingResult();
+	
+	console.log(r.rankedPairs());
+	
+	
+	/*
 	var vote = new Vote({
 		options: ["c", "b", "a", "d", "e"]
 	});
@@ -171,6 +184,7 @@ define('SocialChoice/lib/main', function(require, exports, module) {
 	var rr = vote.getRankingResult();
 	console.log(rr.rankedPairs());
 	console.log(vote.getRunOffResult());
+			*/
 });
 
 // RankedBallot.js (modified 21:02:24)
@@ -405,7 +419,7 @@ define('SocialChoice/lib/result/Bag', function(require, exports, module) {
 	module.exports = Bag;
 });
 
-// result\ImaginaryContest.js (modified 18:59:13)
+// result\ImaginaryContest.js (modified 23:03:25)
 define('SocialChoice/lib/result/ImaginaryContest', function(require, exports, module) {
 	function ImaginaryContest(baseMatrix, x, y) {
 		this.baseMatrix = baseMatrix;
@@ -418,7 +432,7 @@ define('SocialChoice/lib/result/ImaginaryContest', function(require, exports, mo
 	};
 	
 	ImaginaryContest.prototype.loser = function() {
-		return (this.baseMatrix.get(this.x, this.y) < this.baseMatrix.get(this.y, this.x)) ? this.x : this.y;
+		return (this.baseMatrix.get(this.x, this.y) <= this.baseMatrix.get(this.y, this.x)) ? this.x : this.y;
 	};
 	
 	ImaginaryContest.prototype.isDraw = function() {
@@ -530,7 +544,7 @@ define('SocialChoice/lib/result/PluralityResult', function(require, exports, mod
 	module.exports = PluralityResult;
 });
 
-// result\RankingResult.js (modified 19:10:31)
+// result\RankingResult.js (modified 23:05:18)
 define('SocialChoice/lib/result/RankingResult', function(require, exports, module) {
 	var AcyclicPathMatrix = require('./AcyclicPathMatrix');
 	var Matrix = require('./Matrix');
@@ -580,7 +594,9 @@ define('SocialChoice/lib/result/RankingResult', function(require, exports, modul
 		}).sort(function(a, b) {
 			return contestImportanceFunction(b, vote) - contestImportanceFunction(a, vote);
 		}).forEach(function(contest) {
-			paths.set(contest.winner(), contest.loser(), 1);
+			if (contest.isDraw() === false) {
+				paths.set(contest.winner(), contest.loser(), 1);
+			}
 		});
 	
 		// ranking goes from least transitive defeats to most transitive defeats.
@@ -817,7 +833,7 @@ define('SocialChoice/lib/Util', function(require, exports, module) {
 	Util.binarySearch = binarySearch;
 });
 
-// Vote.js (modified 19:25:03)
+// Vote.js (modified 22:13:26)
 define('SocialChoice/lib/Vote', function(require, exports, module) {
 	var RankedBallot = require('./RankedBallot');
 	var ScoredBallot = require('./ScoredBallot');
@@ -952,7 +968,7 @@ define('SocialChoice/lib/Vote', function(require, exports, module) {
 	};
 	
 	Vote.Restrictions = Restrictions;
-	Vote.BallotTransforms = require('./BallotTransforms');
+	Vote.BallotTransforms = BallotTransforms;
 	
 	module.exports = Vote;
 });

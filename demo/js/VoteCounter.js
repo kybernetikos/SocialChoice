@@ -16,7 +16,7 @@ VoteCounter.prototype.calculateVotes = function() {
 
 	this._addUpEachVote(ballotBox, allVotes);
 
-	var resultsString = ballotBox.getRankingResult().rankedPairs().join(" ")''
+	var resultsString = ballotBox.getRankingResult().rankedPairs().join(" ");
 
 	this.voteResult(resultsString);
 }
