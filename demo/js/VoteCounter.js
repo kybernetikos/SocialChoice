@@ -1,9 +1,19 @@
 var VoteCounter = function(voterHandler, voteHandler) {
 	this.voterHandler = voterHandler;
 	this.voteHandler = voteHandler;
-	this.voteResult = ko.observable("");
-	ko.applyBindingsToNode(document.getElementById("results"), null, this);
+    this.voteResult = ko.observable("");
+    this.selectedVotingType = ko.observable("");
+    this.voteOptions = ko.observableArray([]);
+    this.addVoteOptions();
+    ko.applyBindingsToNode(document.getElementById("results"), null, this);
+    ko.applyBindingsToNode(document.getElementById("voteType"), null, this);
 
+}
+
+VoteCounter.prototype.addVoteOptions = function() {
+    this.voteOptions.push({
+        optionsText: "RankedPairs"
+    });
 }
 
 VoteCounter.prototype.calculateVotes = function() {

@@ -29,7 +29,8 @@
 	<div>
 		<input id="voterNameInput"><button id="voterNameButton" onclick="addVoter()">Add Voter</button>
 		<input id="voteNameInput"><button id="voteNameButton" onclick="addVote()">Add Vote</button>
-		<button onclick="calculateVotes()">Calculate Votes</button>
+		<select id="voteType" data-bind="options: voteOptions, optionsText: 'optionsText', value: selectedVotingType"></select>
+        <button onclick="calculateVotes()">Calculate Votes</button>
 		<div id="results" data-bind="text: voteResult"></div>
 	</div>
 	<script>
