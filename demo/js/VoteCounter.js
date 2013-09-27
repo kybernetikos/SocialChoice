@@ -14,12 +14,14 @@ VoteCounter.prototype.calculateVotes = function() {
 		options: allOptions
 	});
 
-	this.addUpEachVote(ballotBox, allVotes)
+	this._addUpEachVote(ballotBox, allVotes);
 
-	this.voteResult(ballotBox.getRankingResult().rankedPairs().join(" "));
+	var resultsString = ballotBox.getRankingResult().rankedPairs().join(" ")''
+
+	this.voteResult(resultsString);
 }
 
-VoteCounter.prototype.addUpEachVote = function(ballotBox, allVotes) {
+VoteCounter.prototype._addUpEachVote = function(ballotBox, allVotes) {
 	for (var index in allVotes) {
 		var voters = allVotes[index];
 		voters.unshift(1);
