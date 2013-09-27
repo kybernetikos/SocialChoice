@@ -2,11 +2,10 @@ var VoterHandler = function() {
 	this.voters = ko.observableArray([]);
 	this.voters.push();
 	ko.applyBindingsToNode(document.getElementById("voter"), null, this);
+}
 
-	this.voteHandler = new VoteHandler(this);
-
-	this.addVoter("Adam");
-	this.addVoter("Jon");
+VoterHandler.prototype.setVoteHandler = function(voteHandler) {
+	this.voteHandler = voteHandler;
 }
 
 VoterHandler.prototype.addVoter = function(voterName) {
@@ -15,10 +14,6 @@ VoterHandler.prototype.addVoter = function(voterName) {
 	this.voters.push(voter);
 
 	this.enableDragOnAllVotes();
-}
-
-VoterHandler.prototype.addVote = function(voteName) {
-	this.voteHandler.addVote(voteName)
 }
 
 VoterHandler.prototype.addVoteToAllVoters = function(vote) {
