@@ -4,6 +4,7 @@ permalink: /todo.html
 title: SocialChoice TODO List
 ---
 
+* Remove cycles of equal importance in RankedPairs to allow ties.
 * Single winner
  * Other condorcet algorithms for RankingResult, e.g. minimax, beatpath.
  * Bucklin method.
