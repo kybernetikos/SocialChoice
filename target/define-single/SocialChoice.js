@@ -1,4 +1,4 @@
-// 2013-09-26T22:05:18.000Z
+// 2013-09-27T08:14:08.000Z
 // SocialChoice v0.0.1 in a single file (needs a global 'define' function).
 
 // BallotTransforms.js (modified 08:08:52)
@@ -149,7 +149,7 @@ define('SocialChoice/lib/Group', function(require, exports, module) {
 	};
 });
 
-// main.js (modified 22:57:40)
+// main.js (modified 09:07:13)
 define('SocialChoice/lib/main', function(require, exports, module) {
 	var Vote = require('./Vote');
 	var BallotTransforms = require('./BallotTransforms');
@@ -160,7 +160,9 @@ define('SocialChoice/lib/main', function(require, exports, module) {
 	});
 	
 	vote.rank(1, "firefly", "buffy", "angel");
-	vote.rank(1, "firefly", "angel", "buffy");
+	//vote.rank(1, "firefly", "angel", "buffy");
+	vote.rank(1, "angel", "firefly", "buffy");
+	vote.rank(1, "buffy", "angel", "firefly");
 	
 	var r = vote.getRankingResult();
 	
@@ -419,7 +421,7 @@ define('SocialChoice/lib/result/Bag', function(require, exports, module) {
 	module.exports = Bag;
 });
 
-// result\ImaginaryContest.js (modified 23:03:25)
+// result\ImaginaryContest.js (modified 09:13:36)
 define('SocialChoice/lib/result/ImaginaryContest', function(require, exports, module) {
 	function ImaginaryContest(baseMatrix, x, y) {
 		this.baseMatrix = baseMatrix;
@@ -544,7 +546,7 @@ define('SocialChoice/lib/result/PluralityResult', function(require, exports, mod
 	module.exports = PluralityResult;
 });
 
-// result\RankingResult.js (modified 23:05:18)
+// result\RankingResult.js (modified 09:14:08)
 define('SocialChoice/lib/result/RankingResult', function(require, exports, module) {
 	var AcyclicPathMatrix = require('./AcyclicPathMatrix');
 	var Matrix = require('./Matrix');
@@ -590,7 +592,7 @@ define('SocialChoice/lib/result/RankingResult', function(require, exports, modul
 		var paths = new AcyclicPathMatrix(this.choices);
 	
 		this.imaginaryContests.filter(function(contest) {
-			return contestImportanceFunction(contest, vote) > 0;
+			return contest.isDraw() == false;
 		}).sort(function(a, b) {
 			return contestImportanceFunction(b, vote) - contestImportanceFunction(a, vote);
 		}).forEach(function(contest) {

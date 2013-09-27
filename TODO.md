@@ -11,6 +11,7 @@ title: SocialChoice TODO List
  * Veto voting (possibly through a ballot transform)
 * Multi winner
  * Single Transferable Vote. IRV but with distribution of elected votes too.
+ * Fair Share Budget. IRV but for projects requiring money.
  * Seat assignment for SumResult and PluralityResult.
 * UI for setting up and inputting votes.
 * Factory methods for setting up common types of election.
