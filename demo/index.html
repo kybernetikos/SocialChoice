@@ -6,11 +6,12 @@
 		<script src="lib/knockout.js"></script>
 		<script src="lib/mustache.js"></script>
 		<script src="lib/ko.mustache.js"></script>
-		<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
-		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
+		<script src="lib/jquery-ui-1.10.3.custom/js/jquery-1.9.1.js"></script>
+		<script src="lib/jquery-ui-1.10.3.custom/js/jquery-ui-1.10.3.custom.min.js"></script>
 		<script src="js/VoterHandler.js"></script>
 		<script src="js/VoteHandler.js"></script>
 		<script src="js/Voter.js"></script>
+		<script src="js/VoteCounter.js"></script>
 		<script src="../target/single/SocialChoice.js"></script>
 
 		<script id="vote-order-template" type="text/x-handlebars-template">
@@ -28,36 +29,32 @@
 	<div>
 		<input id="voterNameInput"><button id="voterNameButton" onclick="addVoter()">Add Voter</button>
 		<input id="voteNameInput"><button id="voteNameButton" onclick="addVote()">Add Vote</button>
-		<button onclick="calculateVotes()">Calculate Votes</button>
-		<div id="results"></div>
+		<select id="voteType" data-bind="options: voteOptions, optionsText: 'optionsText', value: selectedVotingType"></select>
+        <button onclick="calculateVotes()">Calculate Votes</button>
+		<div id="results" data-bind="text: voteResult"></div>
 	</div>
 	<script>
 		var voterHandler = new VoterHandler();
+		var voteHandler = new VoteHandler(voterHandler);
+		var voteCounter = new VoteCounter(voterHandler, voteHandler);
+
+		voterHandler.addVoter("Adam");
+		voterHandler.addVoter("Jon");
+
+		voteHandler.addVote("Firefly");
+		voteHandler.addVote("Buffy");
+		voteHandler.addVote("Angel");
+
 		function addVoter() {
 			var voterName = document.getElementById("voterNameInput").value;
 			voterHandler.addVoter(voterName);
 		}
 		function addVote() {
 			var voteName = document.getElementById("voteNameInput").value;
-			debugger;
-			voterHandler.addVote(voteName);
+			voteHandler.addVote(voteName);
 		}
 		function calculateVotes() {
-			var allVotes = voterHandler.getAllVotes();
-			var allOptions = voterHandler.getAllOptions();
-			var vote = new SocialChoice({
-				options: allOptions
-			});
-
-			for (var index in allVotes) {
-				var voters = allVotes[index];
-				voters.unshift(1);
-				SocialChoice.prototype.rank.apply(vote, voters);
-				voters.shift(1);
-			}
-
-			var resultsDiv = document.getElementById("results");
-			resultsDiv.innerHTML = vote.getRankingResult().rankedPairs().join(" ");
+			voteCounter.calculateVotes();
 		}
 	</script>
 	</body>
