@@ -4,7 +4,7 @@ permalink: /index.html
 title: SocialChoice
 ---
 
-<script type="text/javascript" src="target/single/SocialChoice.js"></script>
+<script type="text/javascript" src="target/SocialChoice.js"></script>
 
 SocialChoice
 ============

@@ -6,7 +6,8 @@
 	"dependencies": {	},
 	"devDependencies": {
 		"jsdoc3": "git://github.com/jsdoc3/jsdoc.git",
-		"jasmine-node": "1.11.x"
+		"jasmine-node": "1.11.x",
+		"browserify": "2.x"
 	},
 	"main": "./lib/Vote.js",
 	"scripts": {

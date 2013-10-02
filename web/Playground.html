@@ -4,19 +4,14 @@
 	<title></title>
 	<meta charset="utf-8">
 
-	<script src="realm.js"></script>
-	<script>
-		realm.install();
-	</script>
-
-	<script src="../target/define-single/SocialChoice.js"></script>
+	<script src="../target/SocialChoice.js"></script>
 </head>
 <body>
 	SocialChoice
 
 	<script>
 
-		var Dilemma = require('SocialChoice');
+		var Dilemma = SocialChoice;
 		var BallotTransforms = Dilemma.BallotTransforms;
 
 		var d = new Dilemma({options: ["a", "b", "c", "d", "x", "y"]});
