@@ -3,16 +3,22 @@
 	"version": "0.0.1",
 	"description": "A javascript voting framework.",
 	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/kybernetikos/SocialChoice.git"
+	},
 	"dependencies": {	},
 	"devDependencies": {
 		"jsdoc3": "git://github.com/jsdoc3/jsdoc.git",
 		"jasmine-node": "1.11.x",
-		"browserify": "2.x"
+		"browserify": "2.x",
+		"beefy": "0.4.4"
 	},
 	"main": "./lib/Vote.js",
 	"scripts": {
 		"test": "jasmine-node --verbose scenarios",
+		"start": "beefy .:target/SocialChoice.js -- -s SocialChoice",
 		"doc": "jsdoc lib -d doc",
-		"prepublish": "node build/package.js"
+		"prepublish": "browserify -s SocialChoice . -o target/SocialChoice.js"
 	}
 }
